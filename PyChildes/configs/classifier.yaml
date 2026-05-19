@@ -1,0 +1,133 @@
+# ==========================
+# Configuration for .cha file processing — optimized for language disorder classification
+# ==========================
+# @schema: https://talkbank.org/manuals/CHAT.html
+# @version: 1.1.0
+# @base: default.yaml
+#
+# Changes from default.yaml and reasons:
+#
+#   1. replacement: false
+#      Keep the form the child actually produced (e.g. "gonna") instead of the
+#      transcriber's correction ("going to"). Non-standard productions are a
+#      primary diagnostic signal in SLI, DS, LT, and HL.
+#
+#   2. repetition: true
+#      Keep false-starts and immediate repetitions (e.g. "I I want").
+#      Repetitions are among the most established markers of SLI and DS.
+#
+#   3. paralinguistic: 'null'
+#      Remove the <EVT>…</EVT> wrapper around situational events.
+#      These are researcher annotations, not speech, and the XML-like tokens
+#      add noise for text classifiers.
+#
+#   4. explanation: 'null'
+#      Remove <exp>…</exp> explanation tags for the same reason.
+#
+#   5. dependent.keep_data: false  /  dependent.action.keep_data: false
+#      Drop %act and %sit tiers entirely (action descriptions). These are
+#      linked to the paralinguistic change above — without the EVT wrapper
+#      they would appear as raw text polluting the child speech signal.
+#
+# Note: CHI-only filtering (keeping only *CHI lines) is handled by the
+# batch runner (run_prepare_childes.py), not by this config.
+# ==========================
+
+
+header:
+  keep_data: false
+
+
+utterance:
+
+  keep_data: true
+  keep_speaker: true    # kept so the batch runner can filter on <CHI>
+  interposed: false
+  nonverbal: '<0>'
+
+  basic:
+    satellite: false
+    tone: false
+    lengthening: false
+    prim_stress: false
+    sec_stress: false
+    blocking: false
+    pause: false
+
+  linkers:
+    trail_off: false
+    trail_off_q: false
+    exclamation: false
+    interruption: false
+    completion: false
+    interruption_q: false
+    interruption_self: false
+    interruption_self_q: false
+    trans_break: false
+    uptake: false
+    latching: false
+    quote_follow: false
+    quote_precede: false
+    quote_utterance: false
+
+  incomplete:
+    noncompletion: true   # expand (a)n(d) → and; TD kids also reduce words casually
+    omitted: false
+
+  specform:
+    babbling: '<unk>'
+    child_invented: '<unk>'
+    dialect: true
+    family_spec: '<unk>'
+    filled_pause: false   # remove @fp (not commonly annotated in clinical corpora)
+    general: false
+    interjections: true
+    multi_letters: true
+    letter: true
+    neologism: false
+    pcf: false
+    metaling: false
+    singing: true
+    sign: false
+    sas: false
+    l2: true
+    onomatopoeia: true
+    testword: true
+    unibet: false
+    wordplay: '<unk>'
+    excluded: false
+
+  unidentifiable:
+    unintelligible: '<unk>'   # xxx — keep as token; frequency of <unk> is diagnostic
+    phonological: '<unk>'     # yyy
+    untranscribed: '<unk>'    # www
+
+  disfluency:
+    fragment: 'null'          # &+ phonological fragments — marginal gain, leave out
+    filler: 'keep'            # &- fillers (uh, um) — keep; strong disorder markers
+    nonwords: 'unk'           # &~ nonwords → <unk>
+
+  scoped:
+    paralinguistic: 'null'    # CHANGED: was 'EVT' — remove action event tags
+    explanation: 'null'       # CHANGED: was 'exp' — remove explanation tags
+    replacement: false        # CHANGED: was true — keep child's actual production
+    stressing: 'null'         # remove <stress> tags; not relevant for text clf
+    contra_stressing: 'null'
+    alternative: false
+    repetition: true          # CHANGED: was false — keep false starts / repetitions
+    retracing: true           # keep retracing marked as ...
+    reformulation: true
+    false_start: true
+    clause: true
+    error: false              # keep error utterances — errors are the signal
+    precode: false
+    postcode: false
+    back_channel: true
+    include_turn: true
+    excluded: true
+
+
+dependent:
+  keep_data: false            # CHANGED: was true — drop all dependent tiers
+  action:
+    keep_data: false          # CHANGED: was true — drop %act/%sit action lines

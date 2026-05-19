@@ -2,24 +2,18 @@
 """
 categorize_cha.py
 
-Categorizes CHILDES .cha files into: DS, TD, SLI, LT, HL.
+Categoriza los archivos .cha en: DS, TD, SLI, LT, HL.
 
-Detection logic (applied together; conflicts go to 'unsure/'):
-  1. Path-based  : if any ancestor directory is named exactly after a category
-  2. @Types line : e.g.  @Types:  cross, toyplay, LT
-  3. @ID line    : the 2nd pipe-delimited field, e.g.  @ID: eng|DS|CHI|...
+El siguiente código busca caregorizar los archivos basado en los siguientes criterios
+  1. Basado en el nombre del directorio: Si los datos originales se encuentran dentro de una carpeta ya con las iniciales, todos los archivos se categorizan bajo este mismo.
+  2. @Types: Dentro de los archivos existen headers @Types que describen la conversación. Si estos tienen alguna de las iniciales, se categorizan acorde a ello. 
+  3. @ID: Finalmente, en los archivos hay una línea @ID que menciona quien habla y si tiene alguna condición, de aquí también se puede extraer el grupo. 
 
 Outputs
 -------
-  categorized/
-    DS/
-      <prefixed>.cha files
-      metadata.txt          ← line count per file
-    TD/ SLI/ LT/ HL/ (same structure)
-    unsure/
-      <prefixed>.cha files
-      metadata.txt          ← filename + reason for each file
-    global_metadata.txt     ← file count & avg line count per category
+  Organización en carpetas: DS, TD, SLI, LT, HL y unsure
+  Dentro de cada carpeta están los archivos con un nuevo nombre que identifica su origen. La carpeta unsure almacena todos los archivos que no se pudieron categorizar.
+  Se crean archivos llamados metadata que almacena info de cuantos archivos hay, el promedio de líneas y cuantas líneas tiene cada archivo. 
 """
 
 import re
@@ -29,42 +23,46 @@ from collections import defaultdict
 from pathlib import Path
 
 # ── Configuration ──────────────────────────────────────────────────────────────
-
+# Identificamos las categorias a las que se puede pertenecer
 CATEGORIES: set[str] = {"DS", "TD", "SLI", "LT", "HL"}
 
+# Origen de los datos
 SRC = Path(
-    "/home/danielch/Desktop/progra_2026pt1/analisis/final/proyecto_final/raw/childes"
+    "/tu/propio/path/"
 )
+
+# Output de los datos
 DST = Path(
-    "/home/danielch/Desktop/progra_2026pt1/analisis/final/proyecto_final/categorized"
+    "/tu/propio/path/"
 )
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def categories_from_path(file_path: Path) -> set[str]:
-    """Return any category names found among ancestor directory components."""
+    """Busca en los paths disponibles si alguno coincide con el set de nuestras categorías"""
     try:
+        # Busca coincidencia
         rel = file_path.relative_to(SRC)
     except ValueError:
+        # Evita un error si no la encuentra
         return set()
-    # rel.parts[-1] is the filename; everything before that are directories
+    # Busca en todo lo que no es el nombre del archivo
     return {part for part in rel.parts[:-1] if part in CATEGORIES}
 
 
 def categories_from_content(file_path: Path) -> tuple[set[str], list[str]]:
     """
-    Scan the file header for category markers.
-    Returns (found_categories, list_of_evidence_strings).
+    Busca la categoria en el cabecero del archivo.
     """
     found: set[str] = set()
     evidence: list[str] = []
-
+  # Guarda en evidencia si es que pertenece a más de un grupo
     try:
         with open(file_path, encoding="utf-8", errors="replace") as fh:
             for line in fh:
                 line = line.rstrip()
 
-                # @Types:  cross, toyplay, LT
+                # busca en @types si coincide con alguna de las categorías
                 if line.startswith("@Types:"):
                     tokens = re.split(r"[\s,\t]+", line)
                     for tok in tokens:
@@ -72,8 +70,7 @@ def categories_from_content(file_path: Path) -> tuple[set[str], list[str]]:
                             found.add(tok)
                             evidence.append(f'@Types token "{tok}"')
 
-                # @ID:  eng|DS|CHI|9;11.|female|||Target_Child|||
-                # 2nd pipe-delimited field (index 1) is the corpus name
+                # En el caso de no estar en @typer bsuca en @ID si es que existe algun valor para categorizar
                 elif line.startswith("@ID:"):
                     m = re.match(r"@ID:\s+\w+\|([^|]+)\|", line)
                     if m:
@@ -89,8 +86,7 @@ def categories_from_content(file_path: Path) -> tuple[set[str], list[str]]:
 
 def dest_filename(file_path: Path) -> str:
     """
-    Build a flat destination filename by joining all relative path components
-    with underscores.
+    Utiliza el path para crear el nombre del nuevo archivo que almacene de dónde viene el archuvo.
     e.g.  Eng-NA/Brown/Sarah/040700.cha  →  Eng-NA_Brown_Sarah_040700.cha
     """
     rel = file_path.relative_to(SRC)
@@ -98,6 +94,7 @@ def dest_filename(file_path: Path) -> str:
 
 
 def line_count(file_path: Path) -> int:
+  # FUnción para contar palabras
     try:
         with open(file_path, encoding="utf-8", errors="replace") as fh:
             return sum(1 for _ in fh)
@@ -108,9 +105,11 @@ def line_count(file_path: Path) -> int:
 # ── Setup output directories ───────────────────────────────────────────────────
 
 for folder in list(CATEGORIES) + ["unsure"]:
+  # Crea los directorios si es necesario
     (DST / folder).mkdir(parents=True, exist_ok=True)
 
 # ── Main processing loop ───────────────────────────────────────────────────────
+# Itera sobre las carpetas y busca las coincidencias para poder separar entre los grupos de interés
 
 # cat_records[cat] = list of (dest_filename, line_count)
 cat_records: dict[str, list[tuple[str, int]]] = defaultdict(list)
@@ -142,7 +141,6 @@ for idx, fpath in enumerate(all_cha, 1):
         cat_records[cat].append((dname, lc))
 
     else:
-        # Multiple different categories detected — cannot assign unambiguously
         path_str = ", ".join(sorted(path_cats)) if path_cats else "none"
         cont_str  = ", ".join(sorted(content_cats)) if content_cats else "none"
         ev_str    = "; ".join(evidence) if evidence else "none"
@@ -153,9 +151,7 @@ for idx, fpath in enumerate(all_cha, 1):
         unsure_records.append((dname, reason))
         shutil.copy2(fpath, DST / "unsure" / dname)
 
-print("Copying done. Writing metadata...")
-
-# ── Per-category metadata ──────────────────────────────────────────────────────
+# ── metadata ──────────────────────────────────────────────────────
 
 for cat in sorted(CATEGORIES):
     records = sorted(cat_records.get(cat, []))
@@ -171,8 +167,6 @@ for cat in sorted(CATEGORIES):
         for fname, lc in records:
             f.write(f"{fname:<80}  {lc:>6}\n")
 
-# ── Unsure metadata ────────────────────────────────────────────────────────────
-
 unsure_meta = DST / "unsure" / "metadata.txt"
 with open(unsure_meta, "w", encoding="utf-8") as f:
     f.write(f"Unsure files: {len(unsure_records)}\n")
@@ -182,7 +176,6 @@ with open(unsure_meta, "w", encoding="utf-8") as f:
         f.write(f"Reason: {reason}\n")
         f.write("\n")
 
-# ── Global metadata ────────────────────────────────────────────────────────────
 
 global_meta = DST / "global_metadata.txt"
 with open(global_meta, "w", encoding="utf-8") as f:

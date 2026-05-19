@@ -1,17 +1,10 @@
 #!/usr/bin/env python3
 """
-split_binary.py
-
-Creates the binary split from categorized/ into categorized_bi/.
-
-  control/      ← TD only
+Utiliza los archivos separados por categoría para creae 2 carpetas con separación control vs experimental
+  control/      ← TD 
   experimental/ ← DS + HL + LT + SLI
+Se limpia la carpeta de categorized_bi si hay datos adentro
 
-Files are copied (originals in categorized/ are untouched).
-Running this script wipes and rebuilds categorized_bi/ from scratch.
-
-Usage:
-    python3 split_binary.py
 """
 
 import shutil
@@ -19,7 +12,7 @@ from pathlib import Path
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 
-BASE    = Path("/home/danielch/Desktop/progra_2026pt1/analisis/final/proyecto_final")
+BASE    = Path("/Tu/propio/path")
 SRC     = BASE / "categorized"
 DST     = BASE / "categorized_bi"
 
@@ -32,7 +25,7 @@ GROUP_MAP = {
 }
 
 # ── Setup ──────────────────────────────────────────────────────────────────────
-
+# Crealas carpetas necesarias
 if DST.exists():
     shutil.rmtree(DST)
 
@@ -40,7 +33,7 @@ if DST.exists():
 (DST / "experimental").mkdir(parents=True)
 
 # ── Copy files ─────────────────────────────────────────────────────────────────
-
+# Copia los archivos en su respectivo grupo
 counts = {"control": 0, "experimental": 0}
 
 for cat, group in GROUP_MAP.items():
@@ -71,7 +64,7 @@ def avg_lines(directory: Path) -> float:
             pass
     return total / len(files)
 
-print("\nComputing metadata...")
+print("\ metadata...")
 
 ctrl_avg = avg_lines(DST / "control")
 exp_avg  = avg_lines(DST / "experimental")
@@ -86,10 +79,3 @@ with open(DST / "global_metadata.txt", "w", encoding="utf-8") as f:
     f.write(f"  Files        : {counts['experimental']}\n")
     f.write(f"  Average lines: {exp_avg:.1f}\n\n")
     f.write(f"Grand total    : {counts['control'] + counts['experimental']}\n")
-
-# ── Summary ────────────────────────────────────────────────────────────────────
-
-print(f"\nDone.")
-print(f"  control      : {counts['control']} files")
-print(f"  experimental : {counts['experimental']} files")
-print(f"  Output       : {DST}")

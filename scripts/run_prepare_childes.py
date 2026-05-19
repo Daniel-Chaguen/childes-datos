@@ -2,11 +2,10 @@
 """
 run_prepare_childes.py
 
-Batch-runs prepare_childes.py over all .cha files in categorized_bi/
-(control/ and experimental/) and writes cleaned output to prepared_bi/.
+Preprocesa los archivos .cha en la carpeta de categorized_bi.
 
 Changes vs original version:
-  - Default config is now classifier.yaml (optimised for classification).
+  - classifier.yaml (optimised for classification).
   - CHI_ONLY = True: output files contain only the target child's utterances.
     The <CHI> speaker tag is stripped since it is redundant when every line
     in the file already belongs to the child.
@@ -32,15 +31,17 @@ from pathlib import Path
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 
-BASE        = Path("/home/danielch/Desktop/progra_2026pt1/analisis/final/proyecto_final")
+BASE        = Path("/Tu/propio/path")
 PYCHILDES   = BASE / "PyChildes"
 SRC_ROOT    = BASE / "categorized_bi"
 DST_ROOT    = BASE / "prepared_bi"
+# Identificamos el path hacia el archivo yaml con la configuración
 DEFAULT_CFG = str(PYCHILDES / "configs" / "classifier.yaml")
 
-OUTPUT_EXT  = ".txt"   # change to ".jsonl" or ".json" if preferred
+# Determina el formato en txt, se puede cambiar si es necesario
+OUTPUT_EXT  = ".txt" 
 
-# Make PyChildes importable (its modules use plain relative imports)
+# Llama la función desde el código orignal del repositorio
 sys.path.insert(0, str(PYCHILDES))
 from prepare_childes import process_cha_file  # noqa: E402
 
@@ -48,10 +49,9 @@ from prepare_childes import process_cha_file  # noqa: E402
 
 def filter_chi_only(file_path: Path) -> int:
     """
-    Keep only lines spoken by the target child (starting with '<CHI>'),
-    strip the '<CHI>' speaker tag, remove nonverbal <0> tokens and <unk>
-    tokens, and drop lines that carry no linguistic content after cleanup.
-    Returns the number of utterances kept.
+    Filtra las líneas para quedarse sólo con las líneas que empiezan con <CHI>.
+    REmeuve texto no verbal y <unk> que es resultado de palabras o señales no identificadas.
+    Limpia líneas que no tienen contenido linguístico.
     """
     with open(file_path, encoding="utf-8") as f:
         lines = f.readlines()
@@ -62,19 +62,19 @@ def filter_chi_only(file_path: Path) -> int:
         if not stripped.startswith('<CHI>'):
             continue
 
-        # Remove the speaker tag: "<CHI> text ." → "text ."
+        # Quita <CHI>
         content = stripped[len('<CHI>'):].lstrip()
 
-        # Remove nonverbal <0> tokens (gestures, silent turns, &=events).
+        #  Quita <0>
         content = re.sub(r'<0>\s*', '', content)
 
-        # Remove <unk> tokens (unintelligible/babbling/non-standard forms).
+        # Quita <unk> 
         content = re.sub(r'<unk>\s*', '', content)
 
-        # Collapse extra whitespace left by removal
+        # Quita espacios extra en blanco
         content = re.sub(r' {2,}', ' ', content).strip()
 
-        # Drop lines that are empty or reduced to bare punctuation
+        #Quita líneas vacías o que solo mantienen signos de puntuación
         if content and not re.fullmatch(r'[.!?,;:]+', content):
             chi_lines.append(content + '\n')
 
@@ -87,7 +87,7 @@ def filter_chi_only(file_path: Path) -> int:
 
 MIN_LINES = 10
 
-# Short prefix used in output filenames: "control" → "ctrl", "experimental" → "exp"
+#  "control" → "ctrl", "experimental" → "exp"
 GROUP_PREFIX = {"control": "ctrl", "experimental": "exp"}
 
 
@@ -96,7 +96,7 @@ def run_batch(config_path: str, chi_only: bool) -> None:
     total_ok = total_err = total_empty = total_short = 0
     errors: list[tuple[str, str]] = []
 
-    # Clear previous run so stale files don't persist
+    # Limpia los restos de archivos antes procesados
     if DST_ROOT.exists():
         shutil.rmtree(DST_ROOT)
 
@@ -112,7 +112,6 @@ def run_batch(config_path: str, chi_only: bool) -> None:
         print(f"\n[{group}] {len(cha_files)} files → {dst_dir}")
 
         for idx, src_file in enumerate(cha_files, 1):
-            # Temporary path; renamed to final ID-based name if it passes filters
             tmp_file = dst_dir / (src_file.stem + OUTPUT_EXT)
 
             try:
@@ -120,18 +119,15 @@ def run_batch(config_path: str, chi_only: bool) -> None:
 
                 if chi_only:
                     n_kept = filter_chi_only(tmp_file)
-                    # Drop files where the child produced nothing
                     if n_kept == 0:
                         tmp_file.unlink()
                         total_empty += 1
                         continue
-                    # Drop files below the minimum line threshold
                     if n_kept < MIN_LINES:
                         tmp_file.unlink()
                         total_short += 1
                         continue
 
-                # Rename to clean sequential ID: e.g. ctrl_00042.txt
                 file_id += 1
                 final_file = dst_dir / f"{prefix}_{file_id:05d}{OUTPUT_EXT}"
                 tmp_file.rename(final_file)

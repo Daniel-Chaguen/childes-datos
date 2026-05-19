@@ -7,3 +7,5 @@ Diferencias léxicas, semánticas y sintácticas en el lenguaje producido por ni
 Uso:
 
 preprocesamiento basado en el repositorio de: https://github.com/Mars-tin/PyChildes.git
+
+  categorize_cha.py  →  split_binary.py  →  run_prepare_childes.py

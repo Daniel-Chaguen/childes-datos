@@ -113,6 +113,6 @@ La limpieza de las utterances conlleva los siguientes pasos:
   `xxx` (ininteligible), `yyy` (codificado fonológicamente), `www` (no transcrito) → todos → `<unk>`.
 
 
-Ya realizada la limpieza de los utterance, se pasa por un último procesamiento, donde el código elige solo las utterance de los niños <CHI> y quita el <CHI>. Además elimina archivos vacíos, solo con puntuación o archivos con menos de 10 filas. 
+Ya realizada la limpieza de los utterance, se pasa por un último procesamiento, donde el código elige solo las utterance de los niños (CHI) y quita el (CHI). Además elimina archivos vacíos, solo con puntuación o archivos con menos de 10 filas. 
 
 

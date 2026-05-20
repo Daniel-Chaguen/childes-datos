@@ -1,36 +1,9 @@
 # ==========================
-# Configuration for .cha file processing — optimized for language disorder classification
+# Configuration for .cha file processing 
 # ==========================
 # @schema: https://talkbank.org/manuals/CHAT.html
 # @version: 1.1.0
 # @base: default.yaml
-#
-# Changes from default.yaml and reasons:
-#
-#   1. replacement: false
-#      Keep the form the child actually produced (e.g. "gonna") instead of the
-#      transcriber's correction ("going to"). Non-standard productions are a
-#      primary diagnostic signal in SLI, DS, LT, and HL.
-#
-#   2. repetition: true
-#      Keep false-starts and immediate repetitions (e.g. "I I want").
-#      Repetitions are among the most established markers of SLI and DS.
-#
-#   3. paralinguistic: 'null'
-#      Remove the <EVT>…</EVT> wrapper around situational events.
-#      These are researcher annotations, not speech, and the XML-like tokens
-#      add noise for text classifiers.
-#
-#   4. explanation: 'null'
-#      Remove <exp>…</exp> explanation tags for the same reason.
-#
-#   5. dependent.keep_data: false  /  dependent.action.keep_data: false
-#      Drop %act and %sit tiers entirely (action descriptions). These are
-#      linked to the paralinguistic change above — without the EVT wrapper
-#      they would appear as raw text polluting the child speech signal.
-#
-# Note: CHI-only filtering (keeping only *CHI lines) is handled by the
-# batch runner (run_prepare_childes.py), not by this config.
 # ==========================
 
 

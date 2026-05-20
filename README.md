@@ -40,7 +40,7 @@ Niveles:
 3. Identificar si existe algún match en el encabezado @ID
 
 Esto culmina en una separación en carpetas de los archivos de la siguiente forma:
-| Group | Files |
+| Grupo | Archivos |
 |---|---|
 | TD — Typically Developing | 12,508 |
 | SLI — Specific Language Impairment | 882 |
@@ -48,6 +48,14 @@ Esto culmina en una separación en carpetas de los archivos de la siguiente form
 | HL — Hearing Loss | 162 |
 | DS — Down Syndrome | 134 |
 | unsure | 329 |
+
+
+Dada a la diferencia de instancias por grupo y el objetivo del proyecto, utilizando el script de split_binary.py se obtiene una separación en 2 grupos, niños con desarrollo normal y niños ocn algún trastorno del habla (los que se mencionaron anteriormente.
+
+| Separación | Grupos | Archivos |
+|---|---|---|
+| `control/` | TD only | 12,508 |
+| `experimental/` | DS + HL + LT + SLI | 1,693 |
 
 *** Unsure representa esos archivos que el código no fue capaz de separar.
 

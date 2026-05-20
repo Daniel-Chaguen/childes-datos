@@ -35,17 +35,17 @@
 
 
 header:
-  keep_data: false
+  keep_data: false # Drops header
 
 
-utterance:
+utterance: # Important, prerocessing of the main data 
 
   keep_data: true
   keep_speaker: true    # kept so the batch runner can filter on <CHI>
   interposed: false
-  nonverbal: '<0>'
+  nonverbal: '<0>' # Save nonverbal vocals to then drop
 
-  basic:
+  basic: # Drops many of the CHAT codes
     satellite: false
     tone: false
     lengthening: false
@@ -54,7 +54,7 @@ utterance:
     blocking: false
     pause: false
 
-  linkers:
+  linkers: # Drop linkers which are how a sentences is finished or interrupted
     trail_off: false
     trail_off_q: false
     exclamation: false
@@ -71,15 +71,15 @@ utterance:
     quote_utterance: false
 
   incomplete:
-    noncompletion: true   # expand (a)n(d) → and; TD kids also reduce words casually
-    omitted: false
+    noncompletion: true   # expand (a)n(d) → and
+    omitted: false  #  Drops ommiting symbols
 
-  specform:
+  specform: # Cleans up various CHAT codes for non-standard forms, keeps the actual text the child produced
     babbling: '<unk>'
     child_invented: '<unk>'
     dialect: true
     family_spec: '<unk>'
-    filled_pause: false   # remove @fp (not commonly annotated in clinical corpora)
+    filled_pause: false   # remove @fp 
     general: false
     interjections: true
     multi_letters: true
@@ -97,29 +97,29 @@ utterance:
     wordplay: '<unk>'
     excluded: false
 
-  unidentifiable:
-    unintelligible: '<unk>'   # xxx — keep as token; frequency of <unk> is diagnostic
-    phonological: '<unk>'     # yyy
-    untranscribed: '<unk>'    # www
+  unidentifiable: # Handles utterances that cannot be clearly identified
+    unintelligible: '<unk>'   
+    phonological: '<unk>'     
+    untranscribed: '<unk>'    
 
-  disfluency:
-    fragment: 'null'          # &+ phonological fragments — marginal gain, leave out
-    filler: 'keep'            # &- fillers (uh, um) — keep; strong disorder markers
+  disfluency: # Handles various types of disfluencies
+    fragment: 'null'          # &+ phonological fragments — eave out
+    filler: 'keep'            # &- fillers (uh, um) — keeps
     nonwords: 'unk'           # &~ nonwords → <unk>
 
-  scoped:
-    paralinguistic: 'null'    # CHANGED: was 'EVT' — remove action event tags
-    explanation: 'null'       # CHANGED: was 'exp' — remove explanation tags
-    replacement: false        # CHANGED: was true — keep child's actual production
-    stressing: 'null'         # remove <stress> tags; not relevant for text clf
+  scoped: # [] Handles various types of scoped annotations between [  ]. These are researcher annotations.
+    paralinguistic: 'null'    # remove action event tags
+    explanation: 'null'       # remove explanation tags
+    replacement: false        # keep child's actual production
+    stressing: 'null'         
     contra_stressing: 'null'
     alternative: false
-    repetition: true          # CHANGED: was false — keep false starts / repetitions
-    retracing: true           # keep retracing marked as ...
+    repetition: true          # keep false starts / repetitions
+    retracing: true           
     reformulation: true
     false_start: true
     clause: true
-    error: false              # keep error utterances — errors are the signal
+    error: false              # keep error utterances 
     precode: false
     postcode: false
     back_channel: true
@@ -128,6 +128,6 @@ utterance:
 
 
 dependent:
-  keep_data: false            # CHANGED: was true — drop all dependent tiers
+  keep_data: false            # drop all dependent tiers
   action:
-    keep_data: false          # CHANGED: was true — drop %act/%sit action lines
+    keep_data: false          # drop %act/%sit action lines

@@ -74,11 +74,11 @@ La limpieza de las utterances conlleva los siguientes pasos:
   
   | Marcador | Comportamiento por defecto | Nuestro comportamiento |
   |---|---|---|
-  | `[:]` reemplazo | Guarda la corrección (`gonna` → `going to`) | **Guarda el original** (`gonna`) |
-  | `[/]` repetición | Elimina el material repetido | **Mantiene** (`I I want`) |
-  | `[=]` explicación | Envuelve en tag `<exp>` | **Elimina** |
-  | `[^]` paralingüístico | Envuelve en tag `<EVT>` | **Elimina** |
-  | `[*]` error | Descarta la utterance | **Mantiene la utterance** |
+  | `[:]` reemplazo | Guarda la corrección (`gonna` → `going to`) | Guarda el original (`gonna`) |
+  | `[/]` repetición | Elimina el material repetido | Se mantiene (`I I want`) |
+  | `[=]` explicación | Envuelve en tag `<exp>` | Se elimina |
+  | `[^]` paralingüístico | Envuelve en tag `<EVT>` | Se elimina |
+  | `[*]` error | Descarta la utterance | Mantiene la utterance |
   
   **Paso 5 — Formas especiales** (`process_special_form`)
   
@@ -106,7 +106,7 @@ La limpieza de las utterances conlleva los siguientes pasos:
   | Marcador | Significado | Tratamiento |
   |---|---|---|
   | `&+` | Fragmento fonológico | Eliminado |
-  | `&-` | Filler (uh, um, er) | **Mantenido** |
+  | `&-` | Filler (uh, um, er) | Se mantiene |
   | `&~` | No-palabra | → `<unk>` |
 
   **Paso 9 — Habla no identificable** (`process_unidentifiable`)

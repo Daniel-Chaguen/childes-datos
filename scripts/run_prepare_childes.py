@@ -1,27 +1,7 @@
 #!/usr/bin/env python3
 """
-run_prepare_childes.py
-
-Preprocesa los archivos .cha en la carpeta de categorized_bi.
-
-Changes vs original version:
-  - classifier.yaml (optimised for classification).
-  - CHI_ONLY = True: output files contain only the target child's utterances.
-    The <CHI> speaker tag is stripped since it is redundant when every line
-    in the file already belongs to the child.
-  - Continuation-line bug in prepare_childes.py has been fixed upstream so
-    Forrester files (and any other corpora with tab-indented timing lines)
-    no longer crash.
-
-Output structure:
-  prepared_bi/
-    control/        ← cleaned CHI-only TD utterances (.txt)
-    experimental/   ← cleaned CHI-only DS+HL+LT+SLI utterances (.txt)
-    errors.log      ← created only if any files fail
-
-Usage:
-    python3 run_prepare_childes.py [--config path/to/config.yaml] [--no-chi-only]
-"""
+Uso:
+    python3 run_prepare_childes.py
 
 import argparse
 import re
@@ -41,21 +21,22 @@ DEFAULT_CFG = str(PYCHILDES / "configs" / "classifier.yaml")
 # Determina el formato en txt, se puede cambiar si es necesario
 OUTPUT_EXT  = ".txt" 
 
-# Llama la función desde el código orignal del repositorio
+# Llama la función desde el el script
 sys.path.insert(0, str(PYCHILDES))
-from prepare_childes import process_cha_file  # noqa: E402
+from prepare_childes import process_cha_file  
 
-# ── CHI-only filter ────────────────────────────────────────────────────────────
+# ── filtro CHI ────────────────────────────────────────────────────────────
 
 def filter_chi_only(file_path: Path) -> int:
     """
     Filtra las líneas para quedarse sólo con las líneas que empiezan con <CHI>.
-    REmeuve texto no verbal y <unk> que es resultado de palabras o señales no identificadas.
+    Remeuve texto no verbal y <unk> que es resultado de palabras o señales no identificadas.
     Limpia líneas que no tienen contenido linguístico.
     """
+  # Busca los archivos que ya fueron procesados por PyCHildes
     with open(file_path, encoding="utf-8") as f:
         lines = f.readlines()
-
+  # Busca líneas con CHI
     chi_lines = []
     for line in lines:
         stripped = line.strip()
@@ -83,8 +64,9 @@ def filter_chi_only(file_path: Path) -> int:
 
     return len(chi_lines)
 
-# ── Batch runner ───────────────────────────────────────────────────────────────
+# ── Batch  ───────────────────────────────────────────────────────────────
 
+#Mínimo de líneas que necesita un archivo para no ser descartado
 MIN_LINES = 10
 
 #  "control" → "ctrl", "experimental" → "exp"
@@ -101,22 +83,28 @@ def run_batch(config_path: str, chi_only: bool) -> None:
         shutil.rmtree(DST_ROOT)
 
     for group in groups:
+      # Crea prepared_bi/control/ y prepared_bi/experimental/
         src_dir  = SRC_ROOT / group
         dst_dir  = DST_ROOT / group
         dst_dir.mkdir(parents=True, exist_ok=True)
 
+      # Determina las convenciones de nombre que se le pondrá a los archivos
         prefix     = GROUP_PREFIX[group]
         cha_files  = sorted(src_dir.glob("*.cha"))
         file_id    = 0   # counter for the clean sequential ID
 
         print(f"\n[{group}] {len(cha_files)} files → {dst_dir}")
-
+       
+     
+      # Se crea un loop y le aplica el preprocesamiento determinado por el script de PyChildes
+      # Utiliza la configuración determinada por el yaml
+      
         for idx, src_file in enumerate(cha_files, 1):
             tmp_file = dst_dir / (src_file.stem + OUTPUT_EXT)
 
             try:
                 process_cha_file(str(src_file), str(tmp_file), config_path)
-
+            # Aplica los filtros post PyChildes (Solo CHI, sin 0 y sin archivos con menos de 10 filas)
                 if chi_only:
                     n_kept = filter_chi_only(tmp_file)
                     if n_kept == 0:
@@ -127,7 +115,7 @@ def run_batch(config_path: str, chi_only: bool) -> None:
                         tmp_file.unlink()
                         total_short += 1
                         continue
-
+                # Si el archivo pasa los filtros llega aquí y recibe su nuevo nombre co id y grupo
                 file_id += 1
                 final_file = dst_dir / f"{prefix}_{file_id:05d}{OUTPUT_EXT}"
                 tmp_file.rename(final_file)
@@ -145,7 +133,7 @@ def run_batch(config_path: str, chi_only: bool) -> None:
                       f"empty={total_empty}  err={total_err})",
                       flush=True)
 
-    # ── Summary ────────────────────────────────────────────────────────────────
+    # ── REsumen final y lo que se pudo procesar ────────────────────────────────────────────────────────────────
     print(f"\nDone.")
     print(f"  Processed successfully : {total_ok}")
     print(f"  Skipped (no CHI speech): {total_empty}")
@@ -153,6 +141,7 @@ def run_batch(config_path: str, chi_only: bool) -> None:
     print(f"  Errors                 : {total_err}")
     print(f"  Output                 : {DST_ROOT}")
 
+    # Se crea el log si surgen errores en el procesamiento
     if errors:
         err_log = DST_ROOT / "errors.log"
         with open(err_log, "w", encoding="utf-8") as f:
@@ -163,29 +152,7 @@ def run_batch(config_path: str, chi_only: bool) -> None:
 
 # ── Entry point ────────────────────────────────────────────────────────────────
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Batch-prepare all categorized_bi .cha files with prepare_childes."
-    )
-    parser.add_argument(
-        "--config",
-        type=str,
-        default=DEFAULT_CFG,
-        help=f"Path to YAML config (default: classifier.yaml)",
-    )
-    parser.add_argument(
-        "--no-chi-only",
-        action="store_true",
-        default=False,
-        help="Keep all speakers instead of filtering to CHI only (default: CHI only)",
-    )
-    args = parser.parse_args()
+  # Permite cargar el script para usar sus funciones
+  if __name__ == "__main__":
+      run_batch(DEFAULT_CFG, True)
 
-    chi_only = not args.no_chi_only
-
-    print(f"Config   : {args.config}")
-    print(f"Source   : {SRC_ROOT}")
-    print(f"Output   : {DST_ROOT}")
-    print(f"Format   : {OUTPUT_EXT}")
-    print(f"CHI only : {chi_only}")
-    run_batch(args.config, chi_only)

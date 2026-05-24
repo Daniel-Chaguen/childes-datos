@@ -8,6 +8,14 @@ Este proyecto implementa distintas herramientas de la materia de análisis de da
 
 Se utilizan archivos de textos de lenguaje infantil producidos en entrevistas con investigadores y terapeutas mientras se realizan diversas tareas. Los datos fueron obtenidos de la subdivisión de CHILDES de la base de datos pública TalkBank https://talkbank.org/childes/. 
 
+Los materiales del proyecto se organizan de la siguiente manera.
+- 📁 Notebooks: Se incluyen los notebooks de python donde se realizo el analisis estadistico y modelado.
+- 📁 PyChildes/Config
+- 📁 Metrics Pipeline: Archivos .py utilizados para el calculo de las métricas
+- 📁 Outputs: Los archivos que contienen el dataframe final con las metricas calculadas. En formato csv y xml
+- 📁 Raw: Archivos con los datos crudos, vacio debido al peso de los archivos.
+- 📁 Scripts: Archivos utilizados para el preprocesamiento de los archivos .cha
+
 
 #### Uso:
 El preprocesamiento está basado en el repositorio de: https://github.com/Mars-tin/PyChildes.git
